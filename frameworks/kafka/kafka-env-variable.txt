@@ -1,0 +1,16 @@
+Kafka Broker Environment Variables
+
+
+KAFKA_CFG_ZOOKEEPER_CONNECT: Comma separated host:port pairs, each corresponding to a Zookeeper Server.
+ALLOW_PLAINTEXT_LISTENER: Allow to use the PLAINTEXT listener.
+KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: Map between listener names and security protocols.
+KAFKA_CFG_LISTENERS: Comma-separated list of URIs we will listen on and the listener names.
+KAFKA_CFG_ADVERTISED_LISTENERS: Listeners to publish to ZooKeeper for clients to use, if different than the listeners config property.
+KAFKA_INTER_BROKER_LISTENER_NAME: Name of listener used for communication between brokers.
+KAFKA_CFG_NUM_PARTITIONS: The default number of log partitions per topic
+KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: Allow automatic topic creation on the broker when subscribing to or assigning a topic.
+KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: default replication factors for automatically created topics
+KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: The replication factor for the offsets topic
+KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: The replication factor for the transaction topic
+KAFKA_HEAP_OPTS: Kafka's Java Heap size.
+KAFKA_CFG_BROKER_ID: Kafka's broker custom id.

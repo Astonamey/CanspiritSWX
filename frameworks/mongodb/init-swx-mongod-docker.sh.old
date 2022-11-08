@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#stop execution if any shell cmd encounters an error
+set -e
+echo "Hello! I'm swx-mongod-docker-image. Starting up at: $(date)"
+echo
+
+############ Java section START
+#check JAVA_HOME env
+echo "Checking JAVA HOME. You should the see java home path now:"
+echo echo "\$JAVA_HOME : $JAVA_HOME"
+echo "Checking JAVA version..."
+echo "$(java -version)"
+############ Java section END
+
+##only for debugging!! uncomment only if you know what you are doing!!
+echo "Waiting to be stopped..."
+tail -f /dev/null
+
+#fin

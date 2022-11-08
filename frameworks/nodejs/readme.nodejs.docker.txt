@@ -1,0 +1,1 @@
+1. Till SWX 5, the nodejs version 12.22.7.

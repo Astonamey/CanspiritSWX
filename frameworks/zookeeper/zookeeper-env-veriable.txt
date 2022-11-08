@@ -1,0 +1,13 @@
+Zookeeper Environment Variables
+
+ALLOW_ANONYMOUS_LOGIN - Allow to accept connections from unauthenticated users.
+ZOO_SERVER_ID - ID of the server in the ensemble.
+ZOO_SERVERS - Comma, space, or semi-colon separated list of servers.
+ZOO_PORT_NUMBER - ZooKeeper client port
+ZOO_TICK_TIME: Basic time unit in milliseconds used by ZooKeeper for heartbeats.
+ZOO_INIT_LIMIT: ZooKeeper uses to limit the length of time the ZooKeeper servers in quorum have to connect to a leader.
+ZOO_SYNC_LIMIT: How far out of date a server can be from a leader.
+ZOO_AUTOPURGE_PURGEINTERVAL: the time interval in hours for which the purge task has to be triggered.
+ZOO_AUTOPURGE_SNAPRETAINCOUNT: number of most recent snapshots and the corresponding transaction logs in the dataDir and dataLogDir to keep.
+ZOO_MAX_CLIENT_CNXNS: Limits the number of concurrent connections that a single client may make to a single member of the ZooKeeper ensemble.
+ZOO_HEAP_SIZE: Size in MB for the Java Heap options (Xmx and XMs).

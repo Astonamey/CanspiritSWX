@@ -1,0 +1,33 @@
+#
+# This is the mongodb docker image build file.
+# The build cmd for this image is: "docker build --tag swx-mongod-docker-image:0.1.0 ." 
+# The docker daemon must be running on the machine you are building this on. The tag
+# version needs to be updated for each new build of the image.
+# 
+
+#IMP - whenever the base image version changes the FROM must change!
+FROM swx-base-docker-image:0.1.0
+
+#
+# Labels
+#
+LABEL maintainer="someone@entrib.com"
+LABEL app="SWX-MONGOD-DOCKER-IMAGE"
+LABEL version=0.1
+
+#install mongo & its dep. we will use the official mongodb-org packages and
+#not the ubuntu repo packages.
+#RUN apt-get -y install gnupg 
+
+#copy must include user:group else build will fail. emgda will work because
+#that user:group has already been created in the FROM image
+COPY --chown=emgda:emgda init-swx-mongod-docker.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-swx-mongod-docker.sh
+
+#
+#Entrypoint. Note that if a downstream image Dockerfile has an entrypoint, this will
+#not be called.
+#
+ENTRYPOINT ["init-swx-mongod-docker.sh"]
+
+#fin

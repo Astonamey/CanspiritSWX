@@ -1,0 +1,5 @@
+swx-docker-vm1.sles-15.sp3_key.pem azureuser@20.198.6.134
+swx-docker-vm1.opnsuseleap-15.3_key.pem azureuser@20.198.5.5
+swx-docker-vm2.ubt-20.04-lts_key.pem azureuser@20.198.7.72
+swx-docker-vm3.ubt-18.04-lts_key.pem azureuser@20.198.72.81
+

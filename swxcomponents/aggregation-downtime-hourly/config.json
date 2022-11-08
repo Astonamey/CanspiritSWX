@@ -1,0 +1,41 @@
+{
+    "server": {
+        "hostname" : "20.198.5.5",
+        "port" : 80
+    },
+    "client": {
+        "credentials" : {
+            "identifier" : "amandwale@entrib.com", 
+            "password" : "entrib"
+        }
+    },
+    "kafkaLogLevel": 1,
+    "logLevel": "error",
+    "isProducerEnabled": true,
+    "instanceType": "aggregate-downtime-hourly",
+    "cacheExpiryInHours": 2,
+    "mongo": {
+        "url": "mongodb://emgda:ShopWorx110T@20.198.5.5:27017//emgda?replicaSet=rs0"",
+        "dbName": "emgda",
+        "options": {
+            "poolSize": 30,
+            "connectTimeoutMS": 10000,
+            "useUnifiedTopology": true,
+            "readPreference": "secondaryPreferred"
+        }
+    },
+    "consumer": {
+        "brokerlist": ["20.198.72.81:10089"],
+        "clientId": "aggregation-downtime-hourly-consumer-1",
+        "groupId": "aggregation-downtime-hourly-consumer-group",
+        "topicName": "aggregation-downtime",
+        "isReadFromBeginning": false,
+        "isBatchEnabled": false,
+        "maxBytesPerPartition": 10000
+    },
+    "producer": {
+        "brokerlist": ["20.198.72.81:10089"],
+        "clientId": "aggregation-downtime-hourly-producer-1",
+        "topicName": "transformation-hourly"
+    }
+}

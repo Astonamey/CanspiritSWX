@@ -1,0 +1,99 @@
+
+Setting up SWX on docker.
+===================================================
+
+Assumptions:
+ - Docker is already installed on all machines where SWX containers are to be run.
+ - SSH keys to these machines are available with you.
+
+A) What are we trying to do?
+ - Test how easily (or with difficulty) can SWX components be setup on a docker infrastructure. Once setup succeeds, how does SWX testing fare?
+
+B) What is available to be tested?
+ - Docker infrastructure for all the frameworks that SWX relies on (PSQL, Mongo, Tomcat, Kafka ...etc).
+
+C) What is not available for testing?
+ - Docker support inside the Deployer. This means that you may need to run a lot of steps manually (i.e. most of the work that Deployer does - some of it is coded into the Docker images but not all). Here, QA can try Deployer instead of manual but the outcome is unknown. If you want to try the Deployer route then it is better to take backups of the VMs so that we can easily restore back to a safe state if things go wrong. For backups, please contact Sushrut or Pushpender since they require an Azure account with certain permissions.
+ - SWX components as Docker services that can be seamlessly run in a cluster. This is pending results of the testing in A) above. Thus we will not be testing clustered installs of any component in this phase.
+
+D) What testing is to be carried out?
+ - First, testing of the docker work that you are going to reuse - you will setup a registry, build images and start containers. Test if the documentation and the actual execution are aligned and as expected.
+ - Second, after you get the docker images done and are able to run containers, you will start setting up SWX into those containers as described below. Test if the setup is happening as expected, document any additional steps that you needed to take.
+
+The above two steps may require Dev & QA to work together to resolve some of the issues. It is expected that issues would be found and QA is expected to log all of them, however small.
+
+ - Third, once setup is done then you will need test out SWX itself - a full regression test. This is to be carried out like you do today. All defects to be logged.
+
+
+Step 0. Machine IPs. These are VMs on Azure.
+-------
+The machine IP addresses and their keys are available in keys.7z. Create an ssh session to all of them. On each VM docker must be already installed. You can verify with 'sudo docker version'.
+
+Step 1. Login to the Ubuntu 20.04 VM and Setup a local docker private registry
+-------
+    a. We will designate this VM as our registry VM. The other 3 will be used to run the containers. Run the following cmd: 'docker run -d -p 5000:5000 --restart=always --name registry registry:2'. This will download the docker registry image and run a container locally for that.
+
+    b. Create a folder under /home called 'swxdockersrc'. Move into this folder and sync the docker code from bitbucket (git clone https://<your user name>@bitbucket.org/entrib/dockerized-swx-src.git. you will need access to this. If you dont have it please request Pushpender.)
+
+    c. Build each image starting with the image under the root folder ('dockerized-swx-src' dir.) To know how to build the image, take a look at the Dockerfile - comments have the cmd at the top of the file.
+        i. Build the base swx image in dockerized-swx-src/Dockerfile.
+        ii. Build the images under the subfolders in 'frameworks' dir.
+    
+    d. Once all the images have been built, run cmd 'docker images'. You should see all the images that were built along with their tags.
+
+    e. First step is to allow insecure registry and for that open /etc/docker/daemon.json and add the following (if not already present):
+    {
+     "insecure-registries" : ["<hostname>:5000"]
+    }
+    Do ensure that you have put in the correct hostname. The above mod to daemon.json has to be done on all 4 VMs. Restart of the docker service on each machine is needed after this change.
+
+    f. We now need to push all images to our private registry. (in Ubuntu 20.04 vm)
+        First tag the image:
+        'sudo docker image tag <tag> <registry url>/<tag>'. An example for an image named 'swx-mongod-3.6.4-docker-image' with tag '0.1.0' is:
+        'sudo docker image tag swx-mongod-3.6.4-docker-image:0.1.0 swx-docker-vm2:5000/swx-mongod-3.6.4-docker-image:0.1.0'.
+        
+        Then, push the image into the registry:
+        sudo docker push <registry url>/<tag>. E.g.: 'sudo docker push swx-docker-vm2:5000/swx-mongod-3.6.4-docker-image:0.1.0'.
+        
+        Delete the local images:
+        'sudo docker image remove swx-mongod-3.6.4-docker-image:0.1.0'
+        'sudo docker image remove swx-docker-vm2:5000/swx-mongod-3.6.4-docker-image:0.1.0'.
+
+        Pull the image from another VM:
+        Go to one of the other 3 VMs and issue the following cmd:
+        'sudo docker pull swx-docker-vm2:5000/swx-base-docker-image:0.1.0'. If the command returns no errors, check that the image is available locally using 'sudo docker images'. You can delete it after this.
+
+    g. Do the above steps shown in f for all images that you built.
+
+
+Step 2. Decide if any SWX component would be running in a clustered / HA mode
+-------
+For purposes of this phase, we will run everything as a single instance.
+
+Step 3. Setting up basic docker infrastructure (on each VM apart from the Ubuntu 20.04):
+-------
+    Step a. Setting up the docker network: Critical else containers will not be able to talk to each other.
+    https://docs.docker.com/network/network-tutorial-overlay/#use-an-overlay-network-for-standalone-containers. There is only one docker network for all hosts and all containers. This needs to be completed on each host.
+
+    Step b. Setting up docker volumes: Critical else data will get lost on container removals.
+    https://docs.docker.com/storage/volumes/ - focus only on the '-v' switch. There will be specific volumes for specific swx components. This needs to be completed on each host depending on which swx component will run there.
+    
+    Step c. Decide what SWX component runs in which container and which host will host that container.
+
+    For both of the above, look at the readme's under each folder under 'frameworks' dir. Look for a file called 'readme.***.txt'. It will help with details.
+
+    Ensure that you create all required volumes and network before moving to the next step.
+
+Step 4. Run containers:
+-------
+Each container has a its own specific run cmd. To know what that is, again look at the 'readme.***.txt'. Check that you are able to run each container and that it remains running ('docker ps'). Ensure that you are providing the correct cmd and especially the image:tag are accurate.
+
+Since we have 3 VMs to run containers in, you can divide the containers in a reasonable way across the 3.
+
+Step 5. Get a shell into the containers:
+-------
+For each container, you can get a shell using cmd: 'docker exec -ti <container name> /bin/bash'. This is like a normal bash shell and you can configure os, the framework and install SWX components.
+
+Step 6. Install SWX components into the containers:
+-------
+Which components go into which container should be obvious. You can try the Deployer but it might have errors. If that doesn't work, please try manually.

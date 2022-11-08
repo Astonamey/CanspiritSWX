@@ -1,0 +1,14 @@
+#
+# /etc/ssh/sshd_config
+#
+
+#@tbd - listen address must be 0.0.0.0 since docker assigns arbitrary ip's on actual hosts.
+
+Port 			            22
+ListenAddress 		        0.0.0.0
+LoginGraceTime 		        180
+X11Forwarding 		        no
+SyslogFacility 		        DAEMON
+PasswordAuthentication 	    yes
+PermitEmptyPasswords 	    no
+PermitRootLogin 	        no

@@ -1,0 +1,101 @@
+
+#
+# This is the apache2 docker image build file.
+# The build cmd for this image is:
+# "docker build --tag swx-apache2-2.4.53-docker-image:0.1.0 ." Use '--no-cache' option
+# to build without using the build cache. 
+# The docker daemon must be running on the machine you are building this on. The tag
+# version needs to be updated for each new build of the image.
+# 
+
+#
+#@todo - PENDING!!! SWX specific config & mod folders need to be configured in the Dockerfile and entrypoint script since our image builds apache2 and does not use apt install.
+#
+
+
+FROM swx-base-docker-image:0.1.0
+
+#
+# Labels
+#
+LABEL maintainer="support@entrib.com"
+LABEL app="SWX-APACHE2-2.4.53-DOCKER-IMAGE"
+LABEL version=0.1
+
+#installs
+RUN apt -y update && apt-get install -y --fix-missing \
+    nano \
+    wget \
+    curl \
+    sudo \
+    iproute2 \
+    procps \
+    build-essential \
+    libapr1-dev \
+    libaprutil1-dev \
+    && apt-get clean && rm -rf /tmp/* /var/tmp/*
+
+#
+# Post steps
+#
+COPY set-apache2-config.sh /usr/local/bin/
+RUN chmod u+x /usr/local/bin/set-apache2-config.sh
+
+#
+# Prepare the environment to run our server (env vars)
+#
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
+
+#
+# Install apache2 & needed libs
+#
+
+#zlib
+RUN wget https://zlib.net/zlib-1.2.12.tar.gz
+RUN tar -xvf zlib-1.2.12.tar.gz
+RUN cd zlib-1.2.12/ && ./configure --prefix=/usr/local
+RUN cd zlib-1.2.12/ && make
+RUN cd zlib-1.2.12/ && sudo make install
+
+#pcre
+RUN wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.40/pcre2-10.40.tar.gz
+RUN tar -xvf pcre2-10.40.tar.gz
+RUN cd pcre2-10.40/ && ./configure --prefix=/usr/local/pcre
+RUN cd pcre2-10.40/ && make
+RUN cd pcre2-10.40/ && sudo make install
+ENV PCRE_CONFIG=/usr/local/pcre/bin/pcre2-config
+
+#apache2
+RUN cd /home
+RUN wget http://archive.apache.org/dist/httpd/httpd-2.4.53.tar.gz
+RUN tar -xvf httpd-2.4.53.tar.gz
+RUN cd httpd-2.4.53/ && ./configure --prefix=/usr/local/apache2 --enable-mods-shared=all --enable-mpms-shared=all --enable-deflate --enable-proxy --enable-proxy-balancer --enable-proxy-http --with-pcre=/usr/local/pcre
+RUN cd httpd-2.4.53/ && sudo make
+RUN cd httpd-2.4.53/ && sudo make install
+
+RUN sudo cp /usr/local/apache2/bin/apachectl /etc/init.d/apache24
+RUN sudo chmod +x /etc/init.d/apache24
+
+#
+#Ready the various config files
+#
+#@todo - IMP: The apache configs need to set according to the install paths abovve. The configs are
+#being copied in some folder but this needs to change. SWX specific config will never be correct
+#without this!
+COPY proxy_balancer.conf /etc/apache2/mods-available/proxy_balancer.conf
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY status.conf /etc/apache2/mods-available/status.conf
+COPY security.conf /etc/apache2/conf-available/security.conf
+COPY info.load /etc/apache2/mods-available/info.load
+COPY cache_disk.conf /etc/apache2/mods-available/cache_disk.conf
+COPY mpm_event.conf /etc/apache2/mods-available/mpm_event.conf
+COPY mpm_worker.conf /etc/apache2/mods-available/mpm_worker.conf
+
+# Entrypoint. This will set the config as per what is passed into the Docker RUN cmd.
+
+ENTRYPOINT ["/usr/local/bin/set-apache2-config.sh"]
+
+# end.
+
+# Fin.
